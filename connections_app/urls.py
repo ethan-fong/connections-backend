@@ -16,7 +16,7 @@ router.register(r'categories', CategoryViewSet)
 router.register(r'words', WordViewSet)
 router.register(r'getgame', GetgameViewSet, basename='connectionsjson')
 router.register(r'submit', SubmissionViewSet, basename='app_analytics')
-router.register(r'adminupload', AdminUploadViewSet)
+router.register(r'adminupload', AdminUploadViewSet, basename='admin_upload')
 
 urlpatterns = [
     path('', include(router.urls)),  # Include router URLs
