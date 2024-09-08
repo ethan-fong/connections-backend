@@ -21,8 +21,6 @@ class WordViewSet(viewsets.ModelViewSet):
 
 class GetgameViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
-        print("sleeping to simulate server load")
-        sleep(3)
         if pk is None:
             # Handle the case where no `pk` is provided
             return Response({"error": "Game ID is required"}, status=status.HTTP_400_BAD_REQUEST)

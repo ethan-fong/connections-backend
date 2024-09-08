@@ -31,8 +31,19 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-&psk#na5l=p3q8
 #DEBUG = True
 DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
-ALLOWED_HOSTS = ['connections-backend-production.up.railway.app', '127.0.0.1']
+ALLOWED_HOSTS = [
+    'connections-backend-production.up.railway.app',
+    '127.0.0.1',
+    'localhost'
+]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://connections-backend-production.up.railway.app'
+]
+
+CSRF_COOKIE_SECURE = True  # Ensures the CSRF cookie is only sent over HTTPS
+
+CORS_ALLOWED_ORIGINS = [] # Add your frontend domain here
 
 # Application definition
 
@@ -59,7 +70,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
-CORS_ALLOW_ALL_ORIGINS = True  # For development only, configure this properly in production
+
 ROOT_URLCONF = 'connections_proj.urls'
 
 TEMPLATES = [
@@ -79,7 +90,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'connections_proj.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
