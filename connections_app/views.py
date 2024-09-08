@@ -24,9 +24,7 @@ class AdminUploadViewSet(viewsets.ViewSet):
 
     def create(self, request):
         try:
-            # Parse the JSON file from the request
-            json_file = request.FILES.get('json_file')
-            data = JSONParser().parse(json_file)
+            data = request.data  # Data will already be parsed by DRF
 
             # Recursively update the database
             self.update_database(data)
@@ -37,7 +35,7 @@ class AdminUploadViewSet(viewsets.ViewSet):
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def update_database(self, data):
-        # Implement your logic to update the database recursively using the data from the JSON file
+        # Implement your logic to update the database recursively using the data from the JSON request
         # You can access the models and serializers defined in your views.py file
 
         # Example:
