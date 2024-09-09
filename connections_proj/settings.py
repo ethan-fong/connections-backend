@@ -44,7 +44,7 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_COOKIE_SECURE = True  # Ensures the CSRF cookie is only sent over HTTPS
 
 CORS_ALLOWED_ORIGINS = [
-    'https://ethan-fong.github.io/cs-connections/'
+    'https://ethan-fong.github.io'
 ]
 
 # Application definition
