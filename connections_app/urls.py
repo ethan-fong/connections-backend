@@ -12,7 +12,7 @@ router = DefaultRouter()
 router.register(r'connectionsgames', ConnectionsGameViewSet)
 router.register(r'categories', CategoryViewSet)
 router.register(r'words', WordViewSet)
-router.register(r'submit', SubmissionViewSet, basename='app_submit')
+router.register(r'submit-stats', SubmissionViewSet, basename='app_submit')
 
 urlpatterns = [
     path('', include(router.urls)),  # Include router URLs
