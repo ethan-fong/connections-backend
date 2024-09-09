@@ -36,4 +36,4 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Submission
-        fields = ['id', 'game', 'guesses', 'time_taken', 'is_won']
+        fields = ['id', 'game', 'guesses', 'time_taken', 'is_won', 'submitted_at']
