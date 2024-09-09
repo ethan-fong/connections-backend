@@ -97,13 +97,28 @@ WSGI_APPLICATION = 'connections_proj.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Update database configuration from environment variable (if defined)
+import dj_database_url
+
+import os
+from django.core.exceptions import ImproperlyConfigured
+
+def get_env_variable(var_name):
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        raise ImproperlyConfigured(f"Missing environment variable: {var_name}")
+
+# Define default database URL and admin database URL
+RESTRICTED_DB_URL = get_env_variable('RESTRICTED_DATABASE_URL')
+ADMIN_DB_URL = get_env_variable('ADMIN_DATABASE_URL')
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.parse(ADMIN_DB_URL, conn_max_age=600),
+    'restricted_user': dj_database_url.parse(RESTRICTED_DB_URL, conn_max_age=600),
 }
 
+DATABASE_ROUTERS = ['connections_app.db_routers.AdminRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -129,7 +144,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Toronto'
 
 USE_I18N = True
 
@@ -147,12 +162,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Update database configuration from $DATABASE_URL environment variable (if defined)
-import dj_database_url
-
-if 'DATABASE_URL' in os.environ:
-    DATABASES['default'] = dj_database_url.config(
-        conn_max_age=500,
-        conn_health_checks=True,
-    )

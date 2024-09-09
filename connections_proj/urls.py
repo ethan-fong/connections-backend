@@ -17,7 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from rest_framework.routers import DefaultRouter
+
+from connections_app.admin import (
+    AdminUploadViewSet,
+    AdminGameViewSet,
+    AdminSubmissionsViewSet,
+)
+
+admin_router=DefaultRouter()
+admin_router.register(r'upload', AdminUploadViewSet, basename='admin_upload')
+admin_router.register(r'games', AdminGameViewSet, basename='admin_games')
+admin_router.register(r'listsubmissions', AdminSubmissionsViewSet, basename='admin_submissions')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('connections_app.urls'))  # Ensure 'connections_game' matches the app name
+    path('admin-tools/', include(admin_router.urls)),
+    path('api/', include('connections_app.urls')),
 ]

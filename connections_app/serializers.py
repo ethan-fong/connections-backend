@@ -32,9 +32,8 @@ class ConnectionsGameSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'created_at', 'author', 'num_categories', 'words_per_category', 'game']
 
 class SubmissionSerializer(serializers.ModelSerializer):
+    game = serializers.PrimaryKeyRelatedField(queryset=ConnectionsGame.objects.all())
+
     class Meta:
         model = Submission
-        fields = ['game', 'guesses', 'time_taken', 'is_won']
-    
-    # If you want to handle game as a primary key field
-    game = serializers.PrimaryKeyRelatedField(queryset=ConnectionsGame.objects.all())
+        fields = ['id', 'game', 'guesses', 'time_taken', 'is_won']
