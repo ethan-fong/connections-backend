@@ -37,7 +37,7 @@ class AdminUploadViewSet(viewsets.ViewSet):
             # You can access the models and serializers defined in your views.py file
 
             # Example:
-            game = ConnectionsGame.objects.using('admin').create(
+            game = ConnectionsGame.objects.create(
                 title=data['title'],
                 author=data['author'],
                 created_at=data['created_at'],
@@ -46,7 +46,7 @@ class AdminUploadViewSet(viewsets.ViewSet):
             )
 
             for category_data in data['game']:
-                category = Category.objects.using('admin').create(
+                category = Category.objects.create(
                     related_game=game,
                     category=category_data['category'],
                     difficulty=category_data['difficulty'],
@@ -55,7 +55,7 @@ class AdminUploadViewSet(viewsets.ViewSet):
                 )
 
                 for word in category_data['words']:
-                    Word.objects.using('admin').create(
+                    Word.objects.create(
                         category=category,
                         word=word
                     )
