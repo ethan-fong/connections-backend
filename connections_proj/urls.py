@@ -23,6 +23,8 @@ from connections_app.admin import (
     AdminUploadViewSet,
     AdminGameViewSet,
     AdminSubmissionsViewSet,
+    GuessDistributionView,
+    AverageTimePerCategory
 )
 
 admin_router=DefaultRouter()
@@ -34,4 +36,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('admin-tools/', include(admin_router.urls)),
     path('api/', include('connections_app.urls')),
+    path('guessdist/<int:gameid>/', GuessDistributionView.as_view()),
+    path('timedist/<int:gameid>/', AverageTimePerCategory.as_view())
 ]

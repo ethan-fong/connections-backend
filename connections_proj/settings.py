@@ -46,6 +46,7 @@ CSRF_COOKIE_SECURE = True  # Ensures the CSRF cookie is only sent over HTTPS
 if DEBUG:
     CORS_ALLOWED_ORIGINS = [
         'http://localhost:1234',
+        'http://localhost:3000',
         'https://ethan-fong.github.io'
     ]
 else:
