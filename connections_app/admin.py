@@ -73,8 +73,6 @@ class AdminSubmissionsViewSet(ModelViewSet):
     serializer_class = SubmissionSerializer
 
 class GuessDistributionView(APIView):
-
-    
     def get(self, request, gameid: int, *args, **kwargs):
         submissions = Submission.objects.filter(game=gameid)  # Fetch submissions for the specified game ID
         if not submissions:
@@ -151,3 +149,9 @@ class AverageTimePerCategory(APIView):
                 average_time = 0
             average_distribution[group] = (average_time, values['count'])
         return average_distribution
+
+class SubmissionCountView(APIView):
+    def get(self, request, gameid:int, *args, **kwargs):
+        submissions = Submission.objects.filter(game=gameid).count()
+        wins = Submission.objects.filter(game=gameid).filter(is_won=True).count()
+        return Response({'submission_count': submissions, 'wins': wins}, status=status.HTTP_200_OK)
