@@ -43,9 +43,15 @@ CSRF_TRUSTED_ORIGINS = [
 
 CSRF_COOKIE_SECURE = True  # Ensures the CSRF cookie is only sent over HTTPS
 
-CORS_ALLOWED_ORIGINS = [
-    'https://ethan-fong.github.io'
-]
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        'http://localhost:1234',
+        'https://ethan-fong.github.io'
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        'https://ethan-fong.github.io'
+    ]
 
 # Application definition
 
@@ -109,16 +115,20 @@ def get_env_variable(var_name):
     except KeyError:
         raise ImproperlyConfigured(f"Missing environment variable: {var_name}")
 
-# Define default database URL and admin database URL
-RESTRICTED_DB_URL = get_env_variable('RESTRICTED_DATABASE_URL')
+# Define admin database
 ADMIN_DB_URL = get_env_variable('ADMIN_DATABASE_URL')
 
-DATABASES = {
-    'default': dj_database_url.parse(ADMIN_DB_URL, conn_max_age=600),
-    'restricted_user': dj_database_url.parse(RESTRICTED_DB_URL, conn_max_age=600),
-}
-
-DATABASE_ROUTERS = ['connections_app.db_routers.AdminRouter']
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    DATABASES = {
+        'default': dj_database_url.parse(ADMIN_DB_URL, conn_max_age=600),
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
