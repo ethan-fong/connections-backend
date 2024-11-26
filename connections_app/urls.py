@@ -16,4 +16,5 @@ router.register(r'submit-stats', SubmissionViewSet, basename='app_submit')
 
 urlpatterns = [
     path('', include(router.urls)),  # Include router URLs
+    path('games/code/<str:game_code>/', ConnectionsGameViewSet.as_view({'get': 'retrieve'}), name='game-code-detail'),
 ]

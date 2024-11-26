@@ -32,27 +32,22 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-&psk#na5l=p3q8
 DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
 ALLOWED_HOSTS = [
-    'connections-backend-production.up.railway.app',
+    'vm006.teach.cs.toronto.edu',
     '127.0.0.1',
     'localhost'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://connections-backend-production.up.railway.app'
+    'https://vm006.teach.cs.toronto.edu'
 ]
 
 CSRF_COOKIE_SECURE = True  # Ensures the CSRF cookie is only sent over HTTPS
 
-if DEBUG:
-    CORS_ALLOWED_ORIGINS = [
-        'http://localhost:1234',
-        'http://localhost:3000',
-        'https://ethan-fong.github.io'
-    ]
-else:
-    CORS_ALLOWED_ORIGINS = [
-        'https://ethan-fong.github.io'
-    ]
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:1234',
+    'https://cs-connections.app',
+    'https://vm006.teach.cs.toronto.edu'
+]
 
 # Application definition
 
@@ -79,6 +74,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'connections_proj.middleware.RedirectLoggedInUserMiddleware',
 ]
 
 ROOT_URLCONF = 'connections_proj.urls'
@@ -116,9 +112,6 @@ def get_env_variable(var_name):
     except KeyError:
         raise ImproperlyConfigured(f"Missing environment variable: {var_name}")
 
-# Define admin database
-ADMIN_DB_URL = get_env_variable('ADMIN_DATABASE_URL')
-
 if DEBUG:
     DATABASES = {
         'default': {
@@ -128,8 +121,15 @@ if DEBUG:
     }
 else:
     DATABASES = {
-        'default': dj_database_url.parse(ADMIN_DB_URL, conn_max_age=600),
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': get_env_variable('DJANGO_POSTGRES_DATABASE'),      # The name of your database
+        'USER': get_env_variable('DJANGO_POSTGRES_USER'),          # Your database user
+        'PASSWORD': get_env_variable('DJANGO_POSTGRES_PASS'),  # Your database password
+        'HOST': 'localhost',        # Set to empty string for localhost
+        'PORT': '',                 # Set to empty string for default
     }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
