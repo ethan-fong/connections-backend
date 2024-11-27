@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import ConnectionsGame, Category, Word, Submission
+from .models import Course
 
 class WordSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,19 +18,28 @@ class CategorySerializer(serializers.ModelSerializer):
         # Return list of words for the category
         return [word.word for word in obj.words.all()]
 
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['id', 'name', 'description']  # Replace with actual fields from the Course model
+
 class ConnectionsGameSerializer(serializers.ModelSerializer):
     game = CategorySerializer(many=True, source='categories')
+    course = CourseSerializer()
 
     class Meta:
         model = ConnectionsGame
         fields = ['id',
                   'game_code',
                   'title',
+                  'published',
                   'syntax_highlighting',
                   'created_at',
                   'author',
                   'num_categories',
                   'words_per_category',
+                  'course',
+                  'relevant_info',
                   'game']
 
 class SubmissionSerializer(serializers.ModelSerializer):

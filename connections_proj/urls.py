@@ -16,30 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
+from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
-
-from connections_app.admin import (
-    AdminUploadViewSet,
-    UploadViewSet,
-    AdminGameViewSet,
-    AdminSubmissionsViewSet,
-    GuessDistributionView,
-    AverageTimePerCategory,
-    SubmissionCountView
-)
-
-admin_router=DefaultRouter()
-admin_router.register(r'upload', AdminUploadViewSet, basename='admin_upload')
-admin_router.register(r'create', UploadViewSet, basename='admin_create')
-admin_router.register(r'games', AdminGameViewSet, basename='admin_games')
-admin_router.register(r'listsubmissions', AdminSubmissionsViewSet, basename='admin_submissions')
+from connections_app import views
+from connections_app.urls import urlpatterns as app_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('admin-tools/', include(admin_router.urls)),
-    path('api/', include('connections_app.urls')),
-    path('guessdist/<str:game_code>/', GuessDistributionView.as_view()),
-    path('timedist/<str:game_code>/', AverageTimePerCategory.as_view()),
-    path('count/<str:game_code>/', SubmissionCountView.as_view())
-]
+] + app_urlpatterns
+

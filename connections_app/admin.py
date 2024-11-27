@@ -1,10 +1,6 @@
 import json
 import random
 
-from collections import defaultdict
-from typing import List
-
-from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from rest_framework import status
@@ -12,188 +8,42 @@ from rest_framework import viewsets
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from .models import ConnectionsGame, Category, Word, Submission
-from .serializers import SubmissionSerializer, ConnectionsGameSerializer, UploadSerializer
-
-class AdminUploadViewSet(viewsets.ViewSet):
-    permission_classes = [IsAdminUser]
-
-    def create(self, request):
-        try:
-            data = request.data  # Data will already be parsed by DRF
-
-            # Recursively update the database
-            self.update_database(data)
-
-            # Recursively update the database with parsed data
-            game_code = self.update_database(data)
-
-            return Response({'status': 'success', 'message': f'Database updated successfully! Your game code is: {game_code}'}, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    def update_database(self, data) -> str:
-        unique_game_code = self.generate_game_code()
-        try:
-            game = ConnectionsGame.objects.create(
-                title=data['title'],
-                game_code=unique_game_code,
-                author=data['author'],
-                syntax_highlighting=data['syntax_highlighting'],
-                created_at=data['created_at'],
-                num_categories=data['num_categories'],
-                words_per_category=data['words_per_category']
-            )
-
-            for category_data in data['game']:
-                category = Category.objects.create(
-                    related_game=game,
-                    category=category_data['category'],
-                    difficulty=category_data['difficulty'],
-                    explanation=category_data['explanation']
-                )
-
-                for word in category_data['words']:
-                    Word.objects.create(
-                        category=category,
-                        word=word
-                    )
-        except Exception as e:
-            raise e
-        return unique_game_code
-    
-    @staticmethod
-    def generate_game_code() -> str:
-        consonants = 'BCDFGHJKLMNPQRSTVWXYZ'  # All uppercase consonants
-        while True:
-            game_code = ''.join(random.choices(consonants, k=4))
-            if not ConnectionsGame.objects.filter(game_code=game_code).exists():
-                return game_code
+from .models import ConnectionsGame, Category, Word, Submission, Course
+from .serializers import SubmissionSerializer, ConnectionsGameSerializer, UploadSerializer, CourseSerializer
+from rest_framework.decorators import action
 
 class AdminGameViewSet(ModelViewSet):
     permission_classes = [IsAdminUser]
     queryset = ConnectionsGame.objects.all()
     serializer_class = ConnectionsGameSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        game_code = self.request.query_params.get('game_code', None)
+        if game_code:
+            queryset = queryset.filter(game_code=game_code)
+        return queryset
+
+    def destroy(self, request, *args, **kwargs):
+        game_code = self.request.query_params.get('game_code', None)
+        if game_code:
+            try:
+                game = ConnectionsGame.objects.get(game_code=game_code)
+                game.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            except ConnectionsGame.DoesNotExist:
+                return Response({'status': 'error', 'message': 'Game not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return super().destroy(request, *args, **kwargs)
+
 class AdminSubmissionsViewSet(ModelViewSet):
     permission_classes = [IsAdminUser]
     queryset = Submission.objects.all()
     serializer_class = SubmissionSerializer
 
-class GuessDistributionView(APIView):
-    def get(self, request, game_code: str, *args, **kwargs):
-        try:
-            game = ConnectionsGame.objects.get(game_code=game_code)
-        except ConnectionsGame.DoesNotExist:
-            return Response({'status': 'error', 'message': 'Game not found for this code'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Fetch submissions for the specified game
-        submissions = Submission.objects.filter(game=game)
-        if not submissions:
-            return Response({'status': 'error', 'message': 'Submissions not found for this game'}, status=status.HTTP_400_BAD_REQUEST)
-
-        guess_distribution = self.get_guess_distribution(submissions)
-
-        def convert_dict(d):
-            return {str(k): v for k, v in d.items()}
-
-        # Serialize to JSON
-        json_data = json.dumps(convert_dict(guess_distribution))
-        return Response(json_data)
-    
-    @staticmethod
-    def get_guess_distribution(submissions):
-        guess_distribution = defaultdict(int)
-        
-        for submission in submissions:
-            guesses = submission.guesses
-            for guess_group in guesses:
-                guess_distribution[tuple(sorted(guess_group))] += 1
-        return guess_distribution
-    
-class AverageTimePerCategory(APIView):
-    def get(self, request, game_code: str, *args, **kwargs):
-        try:
-            # Fetch the game using the game code
-            game = ConnectionsGame.objects.get(game_code=game_code)
-        except ConnectionsGame.DoesNotExist:
-            return Response({'status': 'error', 'message': 'Game not found for this code'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Fetch submissions for the specified game
-        submissions = Submission.objects.filter(game=game)
-        if not submissions:
-            return Response({'status': 'error', 'message': 'Submissions not found for this game'}, status=status.HTTP_400_BAD_REQUEST)
-
-        res = []
-        categories_by_id = list(Category.objects.filter(related_game=game).values_list('pk', flat=True))
-        for category in categories_by_id:
-            # Fetch all words related to this category
-            res.append(sorted(list(
-                Word.objects.filter(category=category).values_list('word', flat=True)
-            )))
-        
-        guess_distribution = self.get_guess_time_distribution(submissions, res)
-
-        def convert_dict(d):
-            return {str(k): v for k, v in d.items()}
-
-        # Convert the dictionary
-        json_out = {}
-        json_out["guess distribution"] = convert_dict(guess_distribution)
-
-        # Serialize to JSON
-        json_data = json.dumps(json_out)  # Use json_out instead of guess_distribution
-        return Response(json_data)
-
-    @staticmethod
-    def get_guess_time_distribution(submissions, correct_categories):
-        # Dictionary to store total time and count of samples for each guess group
-        guess_distribution = defaultdict(lambda: {'total_time': 0, 'count': 0})
-        
-        for submission in submissions:
-            guesses = submission.guesses
-            for guess_group in guesses:
-                # Convert guess_group to a tuple and sort it for consistency
-                sorted_group = sorted(guess_group)
-                if sorted_group in correct_categories:
-                    # Get the index of the guess group in the list
-                    index = guesses.index(guess_group)
-                    # Get the time taken for the current guess group
-                    time_value = submission.time_taken[index]
-                    # Update total time and count in the distribution
-                    guess_distribution[tuple(sorted_group)]['total_time'] += time_value
-                    guess_distribution[tuple(sorted_group)]['count'] += 1
-
-        # Calculate average time for each guess group
-        average_distribution = {}
-        for group, values in guess_distribution.items():
-            if values['count'] > 0:
-                average_time = round(values['total_time'] / values['count'], 2)
-            else:
-                average_time = 0
-            average_distribution[group] = (average_time, values['count'])
-        return average_distribution
-
-class SubmissionCountView(APIView):
-    def get(self, request, game_code: str, *args, **kwargs):
-        try:
-            # Fetch the game using the game code
-            game = ConnectionsGame.objects.get(game_code=game_code)
-        except ConnectionsGame.DoesNotExist:
-            return Response({'status': 'error', 'message': 'Game not found for this code'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Count submissions for the specified game
-        submissions_count = Submission.objects.filter(game=game).count()
-        wins_count = Submission.objects.filter(game=game, is_won=True).count()
-
-        return Response({'submission_count': submissions_count, 'wins': wins_count}, status=status.HTTP_200_OK)
-
 class UploadViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
     serializer_class = UploadSerializer
     parser_classes = [MultiPartParser]  # To handle file uploads via multipart
 
@@ -236,6 +86,8 @@ class UploadViewSet(viewsets.ViewSet):
     def update_database(self, data) -> str:
         unique_game_code = self.generate_game_code()
         try:
+            course_name = data['course'].strip().lower()
+            course = Course.objects.get(name__iexact=course_name)
             game = ConnectionsGame.objects.create(
                 title=data.get('title', 'untitled game'),
                 game_code=unique_game_code,
@@ -243,7 +95,9 @@ class UploadViewSet(viewsets.ViewSet):
                 syntax_highlighting=data['syntax_highlighting'],
                 created_at=timezone.now(),
                 num_categories=data['num_categories'],
-                words_per_category=data['words_per_category']
+                words_per_category=data['words_per_category'],
+                course=course,
+                related_info=data['related_info']  # Added related_info field
             )
 
             for category_data in data['game']:
@@ -270,3 +124,84 @@ class UploadViewSet(viewsets.ViewSet):
             game_code = ''.join(random.choices(consonants, k=4))
             if not ConnectionsGame.objects.filter(game_code=game_code).exists():
                 return game_code
+
+class PublishGameViewSet(viewsets.ViewSet):
+    permission_classes = [IsAdminUser]
+    
+    def update(self, request, game_code=None, pk=None):
+        try:
+            game_code = game_code or pk
+            game = ConnectionsGame.objects.get(game_code=game_code)
+            game.published = not game.published
+            game.save()
+            return Response({'status': 'success', 'message': f'Game {game_code} publish status toggled to {game.published}'}, status=status.HTTP_200_OK)
+        except ConnectionsGame.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Game not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class AdminCourseViewSet(ModelViewSet):
+    permission_classes = [IsAdminUser]
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list_games(self, request, course_id=None):
+        try:
+            course = Course.objects.get(id=course_id)
+            games = ConnectionsGame.objects.filter(course=course)
+            page = self.paginate_queryset(games)
+            if page is not None:
+                serializer = ConnectionsGameSerializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            serializer = ConnectionsGameSerializer(games, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Course.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Course not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class AssignGameToCourseViewSet(viewsets.ViewSet):
+    permission_classes = [IsAdminUser]
+
+    def update(self, request, pk=None):
+        try:
+            game_code = pk
+            if not request.data:
+                return Response({'status': 'error', 'message': 'No data provided.'}, status=status.HTTP_400_BAD_REQUEST)
+            if isinstance(request.data, str):
+                course_name = request.data.strip().lower()
+            else:
+                course_name = request.data.get('course') or request.data.get('name')
+                if course_name:
+                    course_name = course_name.strip().lower()
+
+            if not course_name:
+                return Response({'status': 'error', 'message': 'course_name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            game = ConnectionsGame.objects.get(game_code=game_code)
+            course = Course.objects.get(name__iexact=course_name)
+
+            game.course = course
+            game.save()
+
+            serializer = ConnectionsGameSerializer(game)
+            return Response({'status': 'success', 'message': f'Game {game_code} assigned to course {course_name}', 'game': serializer.data}, status=status.HTTP_200_OK)
+        except ConnectionsGame.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Game not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Course.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Course not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -44,7 +44,7 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_COOKIE_SECURE = True  # Ensures the CSRF cookie is only sent over HTTPS
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:1234',
+    'http://localhost:1235',
     'https://cs-connections.app',
     'https://vm006.teach.cs.toronto.edu'
 ]
