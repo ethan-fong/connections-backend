@@ -139,9 +139,6 @@ class PublicUploadViewSet(viewsets.ViewSet):
         try:
             data = request.data  # Data will already be parsed by DRF
 
-            # Recursively update the database
-            self.update_database(data)
-
             # Recursively update the database with parsed data
             game_code = self.update_database(data)
 
