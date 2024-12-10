@@ -93,10 +93,10 @@ class UploadViewSet(viewsets.ViewSet):
                 game_code=unique_game_code,
                 author=data.get('author', 'unknown author'),
                 syntax_highlighting=data['syntax_highlighting'],
-                created_at=timezone.now(),
                 num_categories=data['num_categories'],
                 words_per_category=data['words_per_category'],
                 course=course,
+                published=True,
                 related_info=data['related_info']  # Added related_info field
             )
 
