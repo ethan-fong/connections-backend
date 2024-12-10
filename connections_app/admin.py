@@ -97,7 +97,7 @@ class UploadViewSet(viewsets.ViewSet):
                 words_per_category=data['words_per_category'],
                 course=course,
                 published=True,
-                related_info=data['related_info']  # Added related_info field
+                relevant_info=data['relevant_info']
             )
 
             for category_data in data['game']:
