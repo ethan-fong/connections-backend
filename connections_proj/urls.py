@@ -18,10 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
-from connections_app import views
+from connections_app import student_views
 from connections_app.urls import urlpatterns as app_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),
 ] + app_urlpatterns
 

@@ -1,6 +1,15 @@
 from rest_framework import serializers
 from .models import ConnectionsGame, Category, Word, Submission
 from .models import Course
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class InstructorSerializer(serializers.ModelSerializer):
+    """Serializer for displaying instructor details in the CourseSerializer."""
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "first_name", "last_name"]  # Adjust fields as needed
 
 class WordSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,9 +28,13 @@ class CategorySerializer(serializers.ModelSerializer):
         return [word.word for word in obj.words.all()]
 
 class CourseSerializer(serializers.ModelSerializer):
+    instructor = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),  # Allows setting instructor via ID
+        required=True  # Ensures instructor must be specified
+    )
     class Meta:
         model = Course
-        fields = ['id', 'name', 'description']  # Replace with actual fields from the Course model
+        fields = ['id', 'name', 'instructor', 'description']  # Replace with actual fields from the Course model
 
 class ConnectionsGameSerializer(serializers.ModelSerializer):
     game = CategorySerializer(many=True, source='categories')
@@ -36,6 +49,7 @@ class ConnectionsGameSerializer(serializers.ModelSerializer):
                   'syntax_highlighting',
                   'created_at',
                   'author',
+                  'max_mistakes',
                   'num_categories',
                   'words_per_category',
                   'course',

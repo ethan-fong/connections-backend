@@ -37,17 +37,29 @@ ALLOWED_HOSTS = [
     'localhost'
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://vm006.teach.cs.toronto.edu'
-]
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost:1235',
+    ]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        'https://cs-connections.app',
+        'https://vm006.teach.cs.toronto.edu',
+    ]
 
 CSRF_COOKIE_SECURE = True  # Ensures the CSRF cookie is only sent over HTTPS
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:1235',
-    'https://cs-connections.app',
-    'https://vm006.teach.cs.toronto.edu'
-]
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        'http://localhost:1235',
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        'https://cs-connections.app',
+        'https://vm006.teach.cs.toronto.edu'
+    ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
@@ -62,6 +74,13 @@ INSTALLED_APPS = [
     'connections_app',
     'corsheaders',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',  # Session-based authentication
+        'rest_framework.authentication.BasicAuthentication',   # Basic authentication (optional)
+    ],
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -82,7 +101,9 @@ ROOT_URLCONF = 'connections_proj.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            BASE_DIR / 'templates'
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -94,6 +115,11 @@ TEMPLATES = [
         },
     },
 ]
+
+if DEBUG:
+    LOGIN_REDIRECT_URL = 'http://localhost:1235/instructor/'
+else:
+    LOGIN_REDIRECT_URL = 'https://cs-connections.app/instructor/'
 
 WSGI_APPLICATION = 'connections_proj.wsgi.application'
 

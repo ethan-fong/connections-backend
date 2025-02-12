@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class ConnectionsGame(models.Model):
     title = models.CharField(max_length=255)
@@ -12,6 +13,7 @@ class ConnectionsGame(models.Model):
         ('none', 'None')
     ], default='python')  # Default to 'python'
     author = models.CharField(max_length=255, default="Unknown Author")
+    max_mistakes = models.IntegerField(default=4)
     num_categories = models.IntegerField()
     words_per_category = models.IntegerField()
     published = models.BooleanField(default=False)
@@ -25,6 +27,7 @@ class ConnectionsGame(models.Model):
 class Course(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
+    instructor = models.ForeignKey(User, related_name='courses', on_delete=models.CASCADE)
 
 class Category(models.Model):
     related_game = models.ForeignKey(ConnectionsGame, on_delete=models.CASCADE, related_name='categories')

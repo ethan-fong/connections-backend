@@ -1,0 +1,11 @@
+django_superuser in sqlite db is
+user:test
+pw:test
+
+csc108 instructor account is
+user:csc108
+pw:csc108csc108
+
+ece101 instructor account is
+user:ece101
+pw:ece101ece101
