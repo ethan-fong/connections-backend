@@ -34,11 +34,14 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 ALLOWED_HOSTS = [
     'vm006.teach.cs.toronto.edu',
     '127.0.0.1',
-    'localhost'
+    'localhost',
+    'cs-connections.app',
 ]
 
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = [
+        'https://cs-connections.app',
+        'https://vm006.teach.cs.toronto.edu',
         'http://localhost:1235',
     ]
 else:
@@ -48,9 +51,14 @@ else:
     ]
 
 CSRF_COOKIE_SECURE = True  # Ensures the CSRF cookie is only sent over HTTPS
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'None'
 
 if DEBUG:
     CORS_ALLOWED_ORIGINS = [
+        'https://cs-connections.app',
+        'https://vm006.teach.cs.toronto.edu',
         'http://localhost:1235',
     ]
 else:
@@ -93,7 +101,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'connections_proj.middleware.RedirectLoggedInUserMiddleware',
 ]
 
 ROOT_URLCONF = 'connections_proj.urls'

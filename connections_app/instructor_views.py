@@ -1,4 +1,4 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user
 from django.db.models import Model
 from django.http import HttpRequest
 from django.http import JsonResponse
@@ -53,6 +53,9 @@ class InstructorGameViewSet(ModelViewSet):
             )
         return super().destroy(request, *args, **kwargs)
 
-@login_required
 def check_authenticated(request):
-    return JsonResponse({'authenticated': True, 'username': request.user.username})
+    user = get_user(request)
+    if user.is_authenticated:
+        return JsonResponse({'authenticated': True, 'username': user.username})
+    else:
+        return JsonResponse({'authenticated': False}, status=401)
